@@ -7,7 +7,7 @@
 body { font-family: sans-serif; margin:20px; background:#f2f2f2;}
 .tier { margin: 10px 0; padding: 10px; border-radius: 8px; min-height: 140px; display: flex; gap: 10px; flex-wrap: wrap;}
 img { width: 100px; border: 2px solid #000; border-radius: 6px; cursor: pointer;}
-.tier-label { padding: 5px; font-weight: bold; color: #fff; border-radius: 6px; margin-bottom: 5px;}
+.tier-label { padding: 5px; font-weight: bold; color: #000; border-radius: 6px; margin-bottom: 5px;} /* Letters in black */
 #editPanel { display:none; margin-top:20px; padding:10px; border:1px solid #aaa; border-radius:6px; background:#fff;}
 button { padding:5px 10px; margin:2px; cursor:pointer;}
 </style>
@@ -53,7 +53,7 @@ button { padding:5px 10px; margin:2px; cursor:pointer;}
     <option value="B+">B+</option>
     <option value="B">B</option>
     <option value="C+">C+</option>
-    <option value="C">C</option>
+    <option value="C" selected>C</option>
   </select><br>
   <button onclick="addCard()">Add Card</button>
   <button onclick="saveList()">Save List</button>
@@ -62,7 +62,9 @@ button { padding:5px 10px; margin:2px; cursor:pointer;}
 <script>
 let editMode = false;
 const password = "Rahzel";
+let dragged;
 
+// Toggle edit mode
 function toggleEditMode(){
   if(!editMode){
     let input = prompt("Enter password to edit:");
@@ -70,14 +72,60 @@ function toggleEditMode(){
       alert("Incorrect password");
       return;
     }
-    document.getElementById("editPanel").style.display = "block";
     editMode = true;
+    document.getElementById("editPanel").style.display = "block";
+    enableDragAndDrop();
   } else {
-    document.getElementById("editPanel").style.display = "none";
     editMode = false;
+    document.getElementById("editPanel").style.display = "none";
+    disableDragAndDrop();
   }
 }
 
+// Enable drag-and-drop for all cards
+function enableDragAndDrop(){
+  const images = document.querySelectorAll(".tier img");
+  images.forEach(img=>{
+    img.draggable = true;
+    img.addEventListener("dragstart", dragStart);
+  });
+  const tiers = document.querySelectorAll(".tier");
+  tiers.forEach(tier=>{
+    tier.addEventListener("dragover", dragOver);
+    tier.addEventListener("drop", drop);
+  });
+}
+
+// Disable drag-and-drop
+function disableDragAndDrop(){
+  const images = document.querySelectorAll(".tier img");
+  images.forEach(img=>{
+    img.draggable = false;
+    img.removeEventListener("dragstart", dragStart);
+  });
+  const tiers = document.querySelectorAll(".tier");
+  tiers.forEach(tier=>{
+    tier.removeEventListener("dragover", dragOver);
+    tier.removeEventListener("drop", drop);
+  });
+}
+
+function dragStart(e){
+  dragged = e.target.parentNode; // <a> element
+}
+
+function dragOver(e){
+  e.preventDefault();
+}
+
+function drop(e){
+  e.preventDefault();
+  if(dragged){
+    this.appendChild(dragged);
+  }
+}
+
+// Add new card
 function addCard(){
   const imgUrl = document.getElementById("imgUrl").value;
   const linkUrl = document.getElementById("linkUrl").value;
@@ -110,7 +158,7 @@ function saveList(){
   alert("Tier list saved locally!");
 }
 
-// Load tier list from local storage or preload with commanders
+// Load tier list
 window.onload = function(){
   const saved = localStorage.getItem("commanderTierList");
   if(saved){
@@ -127,28 +175,69 @@ window.onload = function(){
       });
     }
   } else {
-    // Preload commanders with Scryfall images and links
+    // Preload all commanders in C tier
     const commanders = [
-      {name:"Akiri, Line Dancer",tier:"C",url:"https://scryfall.com/card/znr/1/akiri-line-dancer"},
-      {name:"Arcades, the Strategist",tier:"C",url:"https://scryfall.com/card/znr/2/arcades-the-strategist"},
-      {name:"Athreos, Shroud-Veiled",tier:"B",url:"https://scryfall.com/card/znr/3/athreos-shroud-veiled"},
-      {name:"Bohn, Beguiling Balladeer",tier:"B+",url:"https://scryfall.com/card/znr/4/bohn-beguiling-balladeer"},
-      {name:"Brimaz, Blight of Oreskos",tier:"A",url:"https://scryfall.com/card/znr/5/brimaz-blight-of-oreskos"},
-      {name:"Celestine, the Living Saint",tier:"A+",url:"https://scryfall.com/card/znr/6/celestine-the-living-saint"},
-      {name:"Clement, the Worrywort",tier:"S",url:"https://scryfall.com/card/znr/7/clement-the-worrywort"},
-      {name:"Clavileño, First of the Blessed",tier:"S+",url:"https://scryfall.com/card/znr/8/clavileno-first-of-the-blessed"},
-      // ... repeat for all other commanders
+      "Akiri, Line Dancer",
+      "Arcades, the Strategist",
+      "Athreos, Shroud-Veiled",
+      "Bohn, Beguiling Balladeer",
+      "Brimaz, Blight of Oreskos",
+      "Celestine, the Living Saint",
+      "Clement, the Worrywort",
+      "Clavileño, First of the Blessed",
+      "Coram, the Undertaker",
+      "Dihada, Binder of Wills",
+      "Ellivere of the Wild Court",
+      "Eriette, the Beguiler",
+      "Esix, Fractal Bloom",
+      "Felix Five-Boots",
+      "Geralf, the Fleshwright",
+      "Gornog, the Red Reaper",
+      "Gylwain, Casting Director",
+      "Jetmir, Nexus of Revels",
+      "Kadena, Slinking Sorcerer",
+      "King of the Forest",
+      "Lagrella, the Magpie",
+      "Lathliss, Dragon Queen",
+      "Lazav, Dimir Mastermind",
+      "Liberty Prime, Recharged",
+      "Lilah, Undefeated Slickshot",
+      "Magus Lucea Kane",
+      "Mirko, Obsessive Theorist",
+      "Mogis, God of Slaughter",
+      "Nekusar, the Mindrazer",
+      "Niv-Mizzet, Parun",
+      "Obeka, Splitter of Seconds",
+      "Pantlaza, Sun-Favored",
+      "Rakdos, Lord of Riots",
+      "Ruric Thar, the Unbowed",
+      "Satya, Aetherflux Genius",
+      "Sidar Jabari of Zhalfir",
+      "Sivitri, Dragon Master",
+      "Tasha, the Witch Queen",
+      "Thantis, the Warweaver",
+      "The Beamtown Bullies",
+      "The Infamous Cruelclaw",
+      "The Thirteenth Doctor",
+      "The Twelfth Doctor",
+      "Tuvasa, the Sunlit",
+      "Ulalek, Fused Atrocity",
+      "Umbris, Fear Manifest",
+      "Urza, Chief Artificer",
+      "Volo, Guide to Monsters",
+      "Wick, the Whorled Mind",
+      "Wulfgar of Icewind Dale",
+      "Ygra, Eater of All",
+      "Yuma, Proud Protector"
     ];
     commanders.forEach(c=>{
       const a = document.createElement("a");
-      a.href = c.url;
+      a.href = `https://scryfall.com/search?q=${encodeURIComponent(c)}`;
       a.target="_blank";
       const img = document.createElement("img");
-      // Use Scryfall default image search
-      const cardName = encodeURIComponent(c.name);
-      img.src = `https://api.scryfall.com/cards/named?exact=${cardName}&format=image`;
+      img.src = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c)}&format=image`;
       a.appendChild(img);
-      document.getElementById(c.tier).appendChild(a);
+      document.getElementById("C").appendChild(a);
     });
   }
 }
@@ -156,3 +245,4 @@ window.onload = function(){
 
 </body>
 </html>
+
