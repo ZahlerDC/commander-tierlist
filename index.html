@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <title>Commander Tier List</title>
@@ -10,7 +10,6 @@ img { width: 100px; border: 2px solid #000; border-radius: 6px; cursor: pointer;
 .tier-label { padding: 5px; font-weight: bold; color: #000; border-radius: 6px; margin-bottom: 5px;}
 #editPanel { display:none; margin-top:20px; padding:10px; border:1px solid #aaa; border-radius:6px; background:#fff;}
 button { padding:5px 10px; margin:2px; cursor:pointer;}
-#htmlOutput { width:100%; height:400px; margin-top:10px;}
 #trash { margin-top:20px; padding:20px; border:2px dashed #ff0000; text-align:center; font-weight:bold; color:#ff0000; border-radius:8px; }
 </style>
 </head>
@@ -42,128 +41,145 @@ button { padding:5px 10px; margin:2px; cursor:pointer;}
     <option value="C" selected>C</option>
   </select><br>
   <button onclick="addCard()">Add Card</button>
-  <button onclick="generateHTML()">Generate HTML</button>
-  <button onclick="downloadHTML()">Download HTML</button>
-  <textarea id="htmlOutput" readonly placeholder="Generated HTML will appear here"></textarea>
+  <button onclick="clearLocalStorage()">Reset List</button>
 </div>
 
 <script>
-let editMode = false;
 const password = "zz";
-let dragged;
+let editMode = false;
+let dragged = null;
 
-function toggleEditMode(){
-  if(!editMode){
-    let input = prompt("Enter password to edit:");
-    if(input !== password){ alert("Incorrect password"); return; }
-    editMode = true;
-    document.getElementById("editPanel").style.display = "block";
-    enableDragAndDrop();
+// List of default commanders
+const defaultCommanders = [
+  "Akiri, Line Dancer","Arcades, the Strategist","Athreos, Shroud-Veiled",
+  "Bohn, Beguiling Balladeer","Brimaz, Blight of Oreskos","Celestine, the Living Saint",
+  "Clement, the Worrywort","Clavileño, First of the Blessed","Coram, the Undertaker",
+  "Dihada, Binder of Wills","Ellivere of the Wild Court","Eriette, the Beguiler",
+  "Esix, Fractal Bloom","Felix Five-Boots","Geralf, the Fleshwright",
+  "Gornog, the Red Reaper","Gylwain, Casting Director","Jetmir, Nexus of Revels",
+  "Kadena, Slinking Sorcerer","King of the Forest","Lagrella, the Magpie",
+  "Lathliss, Dragon Queen","Lazav, Dimir Mastermind","Liberty Prime, Recharged",
+  "Lilah, Undefeated Slickshot","Magus Lucea Kane","Mirko, Obsessive Theorist",
+  "Mogis, God of Slaughter","Nekusar, the Mindrazer","Niv-Mizzet, Parun",
+  "Obeka, Splitter of Seconds","Pantlaza, Sun-Favored","Rakdos, Lord of Riots",
+  "Ruric Thar, the Unbowed","Satya, Aetherflux Genius","Sidar Jabari of Zhalfir",
+  "Sivitri, Dragon Master","Tasha, the Witch Queen","Thantis, the Warweaver",
+  "The Beamtown Bullies","The Infamous Cruelclaw","The Thirteenth Doctor",
+  "The Twelfth Doctor","Tuvasa, the Sunlit","Ulalek, Fused Atrocity",
+  "Umbris, Fear Manifest","Urza, Chief Artificer","Volo, Guide to Monsters",
+  "Wick, the Whorled Mind","Wulfgar of Icewind Dale","Ygra, Eater of All",
+  "Yuma, Proud Protector"
+];
+
+// Load commanders from localStorage or default
+function loadCommanders() {
+  const saved = localStorage.getItem("tierList");
+  if(saved){
+    const data = JSON.parse(saved);
+    for(const tier in data){
+      const container = document.getElementById(tier);
+      container.innerHTML = `<div class="tier-label">${tier} Tier</div>`;
+      data[tier].forEach(cmd=>{
+        const a = document.createElement("a");
+        a.href = cmd.link;
+        a.target="_blank";
+        const img = document.createElement("img");
+        img.src = cmd.img;
+        a.appendChild(img);
+        container.appendChild(a);
+      });
+    }
   } else {
-    editMode = false;
-    document.getElementById("editPanel").style.display = "none";
-    disableDragAndDrop();
+    // Load default commanders in C-tier
+    const container = document.getElementById("C");
+    container.innerHTML = `<div class="tier-label">C Tier</div>`;
+    defaultCommanders.forEach(c=>{
+      const a = document.createElement("a");
+      a.href = `https://scryfall.com/search?q=${encodeURIComponent(c)}`;
+      a.target="_blank";
+      const img = document.createElement("img");
+      img.src = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c)}&format=image`;
+      a.appendChild(img);
+      container.appendChild(a);
+    });
   }
 }
 
-function enableDragAndDrop(){
-  const images = document.querySelectorAll(".tier img");
-  images.forEach(img=>{
-    img.draggable = true;
+// Save current tier list to localStorage
+function saveCommanders() {
+  const data = {};
+  document.querySelectorAll(".tier").forEach(tier=>{
+    const tierId = tier.id;
+    data[tierId] = [];
+    tier.querySelectorAll("a").forEach(a=>{
+      data[tierId].push({link: a.href, img: a.querySelector("img").src});
+    });
+  });
+  localStorage.setItem("tierList", JSON.stringify(data));
+}
+
+function toggleEditMode() {
+  if(!editMode){
+    const pass = prompt("Enter password:");
+    if(pass !== password){ alert("Wrong password"); return; }
+    editMode = true;
+    document.getElementById("editPanel").style.display = "block";
+    enableDragDrop();
+  } else {
+    editMode = false;
+    document.getElementById("editPanel").style.display = "none";
+    disableDragDrop();
+  }
+}
+
+function enableDragDrop(){
+  document.querySelectorAll(".tier img").forEach(img=>{
+    img.draggable=true;
     img.addEventListener("dragstart", dragStart);
   });
-  const tiers = document.querySelectorAll(".tier");
-  tiers.forEach(tier=>{
+  document.querySelectorAll(".tier").forEach(tier=>{
     tier.addEventListener("dragover", dragOver);
     tier.addEventListener("drop", drop);
   });
-  const trash = document.getElementById("trash");
-  trash.addEventListener("dragover", e => e.preventDefault());
-  trash.addEventListener("drop", e => { e.preventDefault(); if(dragged){ dragged.remove(); } });
+  document.getElementById("trash").addEventListener("dragover", e=>e.preventDefault());
+  document.getElementById("trash").addEventListener("drop", e=>{ e.preventDefault(); if(dragged) dragged.remove(); saveCommanders(); });
 }
 
-function disableDragAndDrop(){
-  const images = document.querySelectorAll(".tier img");
-  images.forEach(img=>{ img.draggable=false; img.removeEventListener("dragstart", dragStart); });
-  const tiers = document.querySelectorAll(".tier");
-  tiers.forEach(tier=>{ tier.removeEventListener("dragover", dragOver); tier.removeEventListener("drop", drop); });
+function disableDragDrop(){
+  document.querySelectorAll(".tier img").forEach(img=>{ img.draggable=false; img.removeEventListener("dragstart", dragStart); });
+  document.querySelectorAll(".tier").forEach(tier=>{ tier.removeEventListener("dragover", dragOver); tier.removeEventListener("drop", drop); });
 }
 
 function dragStart(e){ dragged = e.target.parentNode; }
 function dragOver(e){ e.preventDefault(); }
-function drop(e){ e.preventDefault(); if(dragged){ this.appendChild(dragged); } }
+function drop(e){ e.preventDefault(); if(dragged) { this.appendChild(dragged); saveCommanders(); } }
 
 function addCard(){
   const imgUrl = document.getElementById("imgUrl").value;
   const linkUrl = document.getElementById("linkUrl").value;
   const tier = document.getElementById("tierSelect").value;
   if(imgUrl && linkUrl){
-    const a=document.createElement("a"); a.href=linkUrl; a.target="_blank";
-    const img=document.createElement("img"); img.src=imgUrl; a.appendChild(img);
+    const a = document.createElement("a");
+    a.href = linkUrl; a.target="_blank";
+    const img = document.createElement("img"); img.src = imgUrl;
+    a.appendChild(img);
     document.getElementById(tier).appendChild(a);
-  } else { alert("Please fill in both Image URL and Link URL"); }
+    saveCommanders();
+  } else {
+    alert("Please fill both Image URL and Link URL");
+  }
 }
 
-// Template-based HTML generator
-function generateHTML(){
-  const templateStart = `
-<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Commander Tier List</title><style>
-body{font-family:sans-serif;margin:20px;background:#f2f2f2;}
-.tier{margin:10px 0;padding:10px;border-radius:8px;min-height:140px;display:flex;gap:10px;flex-wrap:wrap;}
-img{width:100px;border:2px solid #000;border-radius:6px;cursor:pointer;}
-.tier-label{padding:5px;font-weight:bold;color:#000;border-radius:6px;margin-bottom:5px;}
-#trash{margin-top:20px;padding:20px;border:2px dashed #ff0000;text-align:center;font-weight:bold;color:#ff0000;border-radius:8px;}
-</style></head><body>
-<h1>Commander Tier List</h1><div id="tierContainer">`;
-  let templateMiddle = "";
-  document.querySelectorAll(".tier").forEach(tier=>{
-    let tierHTML = `<div id="${tier.id}" class="tier" style="background:${tier.style.background}"><div class="tier-label">${tier.querySelector(".tier-label").innerText}</div>`;
-    tier.querySelectorAll("a").forEach(a=>{
-      tierHTML += `<a href="${a.href}" target="_blank"><img src="${a.querySelector("img").src}"></a>`;
-    });
-    tierHTML += `</div>`;
-    templateMiddle += tierHTML;
-  });
-  const templateEnd = `</div><div id="trash">🗑 Drag here to remove a commander</div></body></html>`;
-  document.getElementById("htmlOutput").value = templateStart + templateMiddle + templateEnd;
+function clearLocalStorage(){
+  if(confirm("Reset the tier list to default?")) {
+    localStorage.removeItem("tierList");
+    loadCommanders();
+  }
 }
 
-function downloadHTML(){
-  generateHTML();
-  const blob = new Blob([document.getElementById("htmlOutput").value], {type:"text/html"});
-  const url = URL.createObjectURL(blob);
-  const a=document.createElement("a"); a.href=url; a.download="commander-tierlist.html"; a.click();
-  URL.revokeObjectURL(url);
-}
-
+// Initialize
 window.onload = function(){
-  const commanders=[
-    "Akiri, Line Dancer","Arcades, the Strategist","Athreos, Shroud-Veiled",
-    "Bohn, Beguiling Balladeer","Brimaz, Blight of Oreskos","Celestine, the Living Saint",
-    "Clement, the Worrywort","Clavileño, First of the Blessed","Coram, the Undertaker",
-    "Dihada, Binder of Wills","Ellivere of the Wild Court","Eriette, the Beguiler",
-    "Esix, Fractal Bloom","Felix Five-Boots","Geralf, the Fleshwright",
-    "Gornog, the Red Reaper","Gylwain, Casting Director","Jetmir, Nexus of Revels",
-    "Kadena, Slinking Sorcerer","King of the Forest","Lagrella, the Magpie",
-    "Lathliss, Dragon Queen","Lazav, Dimir Mastermind","Liberty Prime, Recharged",
-    "Lilah, Undefeated Slickshot","Magus Lucea Kane","Mirko, Obsessive Theorist",
-    "Mogis, God of Slaughter","Nekusar, the Mindrazer","Niv-Mizzet, Parun",
-    "Obeka, Splitter of Seconds","Pantlaza, Sun-Favored","Rakdos, Lord of Riots",
-    "Ruric Thar, the Unbowed","Satya, Aetherflux Genius","Sidar Jabari of Zhalfir",
-    "Sivitri, Dragon Master","Tasha, the Witch Queen","Thantis, the Warweaver",
-    "The Beamtown Bullies","The Infamous Cruelclaw","The Thirteenth Doctor",
-    "The Twelfth Doctor","Tuvasa, the Sunlit","Ulalek, Fused Atrocity",
-    "Umbris, Fear Manifest","Urza, Chief Artificer","Volo, Guide to Monsters",
-    "Wick, the Whorled Mind","Wulfgar of Icewind Dale","Ygra, Eater of All",
-    "Yuma, Proud Protector"
-  ];
-  commanders.forEach(c=>{
-    const a=document.createElement("a"); a.href=`https://scryfall.com/search?q=${encodeURIComponent(c)}`;
-    a.target="_blank"; const img=document.createElement("img");
-    img.src=`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c)}&format=image`;
-    a.appendChild(img); document.getElementById("C").appendChild(a);
-  });
+  loadCommanders();
 }
 </script>
 </body>
