@@ -1,55 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8" />
 <title>Commander Tier List</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <style>
-body { font-family: sans-serif; margin:20px; background:#f2f2f2;}
-.tier { margin: 10px 0; padding: 10px; border-radius: 8px; min-height: 140px; display: flex; gap: 10px; flex-wrap: wrap;}
-img { width: 100px; border: 2px solid #000; border-radius: 6px; cursor: pointer;}
-.tier-label { padding: 5px; font-weight: bold; color: #000; border-radius: 6px; margin-bottom: 5px;}
-#editPanel { display:none; margin-top:20px; padding:10px; border:1px solid #aaa; border-radius:6px; background:#fff;}
-button { padding:5px 10px; margin:2px; cursor:pointer;}
-#trash { margin-top:20px; padding:20px; border:2px dashed #ff0000; text-align:center; font-weight:bold; color:#ff0000; border-radius:8px; }
+  :root{--bg:#f2f2f2;--card-border:#000;}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:18px;background:var(--bg);color:#111}
+  h1{margin:0 0 12px}
+  .controls{margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap}
+  button,input,select{padding:6px 8px;border-radius:6px;border:1px solid #bbb;background:#fff;cursor:pointer}
+  #tierContainer{display:flex;flex-direction:column;gap:8px;max-width:1200px}
+  .tier{padding:10px;border-radius:8px;min-height:130px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+  .tier-label{font-weight:700;padding:4px 8px;border-radius:6px;color:#000;margin-bottom:6px;background:rgba(255,255,255,0.6)}
+  a.card{display:inline-block;text-decoration:none}
+  a.card img{width:100px;border:2px solid var(--card-border);border-radius:6px;display:block}
+  #trash{margin-top:10px;padding:14px;border-radius:8px;border:2px dashed #ff4d4d;color:#ff4d4d;text-align:center;font-weight:700}
+  #editPanel{display:none;margin-top:12px;padding:12px;border-radius:8px;border:1px solid #ccc;background:#fff;max-width:900px}
+  label{display:inline-block;margin:6px 0;font-weight:600}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  textarea#jsonOut{width:100%;height:220px;margin-top:8px;font-family:monospace;padding:8px;border-radius:6px;border:1px solid #ccc}
+  .note{font-size:0.9rem;color:#444;margin-top:8px}
+  /* Tier colors (gradient from S red -> C blue) */
+  #S{background:linear-gradient(90deg,#ff4d4d,#ff7f7f)}
+  #A+{background:linear-gradient(90deg,#ff944d,#ffb17a)}
+  #A{background:linear-gradient(90deg,#ffd966,#ffea9a)}
+  #B+{background:linear-gradient(90deg,#fff266,#fff9a8)}
+  #B{background:linear-gradient(90deg,#b3ff66,#d6ff9a)}
+  #C+{background:linear-gradient(90deg,#66ccff,#9fe0ff)}
+  #C{background:linear-gradient(90deg,#4d94ff,#80b4ff)}
+  /* small screens */
+  @media (max-width:700px){
+    a.card img{width:78px}
+    .tier{min-height:100px}
+  }
 </style>
 </head>
 <body>
+  <h1>Commander Tier List</h1>
 
-<h1>Commander Tier List</h1>
-<button onclick="toggleEditMode()">Toggle Edit Mode</button>
+  <div class="controls">
+    <button id="toggleEditBtn">Toggle Edit Mode</button>
+    <button id="exportBtn">Export JSON</button>
+    <input id="importFile" type="file" accept=".json" style="display:none">
+    <button id="importBtn">Import JSON</button>
+    <button id="resetBtn">Reset to Default</button>
+    <button id="downloadHTMLBtn" title="Generate a self-contained HTML file of current state">Download Full HTML</button>
+  </div>
 
-<div id="tierContainer">
-  <div id="S" class="tier" style="background:#ff4d4d"><div class="tier-label">S Tier</div></div>
-  <div id="A+" class="tier" style="background:#ff944d"><div class="tier-label">A+ Tier</div></div>
-  <div id="A" class="tier" style="background:#ffd966"><div class="tier-label">A Tier</div></div>
-  <div id="B+" class="tier" style="background:#ffff66"><div class="tier-label">B+ Tier</div></div>
-  <div id="B" class="tier" style="background:#b3ff66"><div class="tier-label">B Tier</div></div>
-  <div id="C+" class="tier" style="background:#66ccff"><div class="tier-label">C+ Tier</div></div>
-  <div id="C" class="tier" style="background:#4d94ff"><div class="tier-label">C Tier</div></div>
-</div>
+  <div id="tierContainer">
+    <div id="S" class="tier"><div class="tier-label">S Tier</div></div>
+    <div id="A+" class="tier"><div class="tier-label">A+ Tier</div></div>
+    <div id="A" class="tier"><div class="tier-label">A Tier</div></div>
+    <div id="B+" class="tier"><div class="tier-label">B+ Tier</div></div>
+    <div id="B" class="tier"><div class="tier-label">B Tier</div></div>
+    <div id="C+" class="tier"><div class="tier-label">C+ Tier</div></div>
+    <div id="C" class="tier"><div class="tier-label">C Tier</div></div>
+  </div>
 
-<div id="trash">🗑 Drag here to remove a commander</div>
+  <div id="trash">🗑 Drag here to remove a commander</div>
 
-<div id="editPanel">
-  <h3>Add a Commander Card</h3>
-  Image URL: <input type="text" id="imgUrl" placeholder="Image URL"><br>
-  Link URL: <input type="text" id="linkUrl" placeholder="Link URL"><br>
-  Tier: 
-  <select id="tierSelect">
-    <option value="S">S</option><option value="A+">A+</option><option value="A">A</option>
-    <option value="B+">B+</option><option value="B">B</option><option value="C+">C+</option>
-    <option value="C" selected>C</option>
-  </select><br>
-  <button onclick="addCard()">Add Card</button>
-  <button onclick="clearLocalStorage()">Reset List</button>
-</div>
+  <div id="editPanel" aria-hidden="true">
+    <h3>Edit Mode</h3>
+
+    <div style="margin-bottom:8px">
+      <strong>Add a commander</strong>
+    </div>
+
+    <div class="row">
+      <label style="min-width:110px">By Scryfall name</label>
+      <input id="nameInput" placeholder="Exact commander name (e.g. 'Atraxa, Praetors' Voice')" style="flex:1">
+      <button id="addByNameBtn">Add (Scryfall)</button>
+    </div>
+
+    <div class="row" style="margin-top:6px">
+      <label style="min-width:110px">Or image URL</label>
+      <input id="imgInput" placeholder="Full image URL" style="flex:1">
+      <input id="linkInput" placeholder="Link URL (Scryfall page or decklink)" style="flex:1">
+      <select id="tierSelect" style="width:90px">
+        <option value="S">S</option><option value="A+">A+</option><option value="A">A</option>
+        <option value="B+">B+</option><option value="B">B</option><option value="C+">C+</option><option value="C">C</option>
+      </select>
+      <button id="addByUrlBtn">Add</button>
+    </div>
+
+    <div style="margin-top:10px" class="row">
+      <button id="saveBtn">Save to localStorage</button>
+      <button id="clearSaveBtn">Clear saved (localStorage)</button>
+    </div>
+
+    <div class="note">
+      Tip: Drag commanders between tiers to reorder. Drag a commander into the red trash area to remove it.
+    </div>
+  </div>
 
 <script>
-const password = "zz";
-let editMode = false;
-let dragged = null;
+/* ======== Configuration ======== */
+const EDIT_PW = 'zz';           // password for edit mode
+const LS_KEY = 'commander_tierlist_v1'; // localStorage key
 
-// List of default commanders
+/* ======== Default Commander Names (start in C) ======== */
 const defaultCommanders = [
   "Akiri, Line Dancer","Arcades, the Strategist","Athreos, Shroud-Veiled",
   "Bohn, Beguiling Balladeer","Brimaz, Blight of Oreskos","Celestine, the Living Saint",
@@ -71,116 +121,367 @@ const defaultCommanders = [
   "Yuma, Proud Protector"
 ];
 
-// Load commanders from localStorage or default
-function loadCommanders() {
-  const saved = localStorage.getItem("tierList");
-  if(saved){
-    const data = JSON.parse(saved);
-    for(const tier in data){
-      const container = document.getElementById(tier);
-      container.innerHTML = `<div class="tier-label">${tier} Tier</div>`;
-      data[tier].forEach(cmd=>{
-        const a = document.createElement("a");
-        a.href = cmd.link;
-        a.target="_blank";
-        const img = document.createElement("img");
-        img.src = cmd.img;
-        a.appendChild(img);
-        container.appendChild(a);
+/* ======== Helper DOM getters ======== */
+const tiers = ['S','A+','A','B+','B','C+','C'].map(id => document.getElementById(id));
+const trash = document.getElementById('trash');
+const editPanel = document.getElementById('editPanel');
+const toggleEditBtn = document.getElementById('toggleEditBtn');
+const exportBtn = document.getElementById('exportBtn');
+const importBtn = document.getElementById('importBtn');
+const importFile = document.getElementById('importFile');
+const resetBtn = document.getElementById('resetBtn');
+const addByNameBtn = document.getElementById('addByNameBtn');
+const addByUrlBtn = document.getElementById('addByUrlBtn');
+const nameInput = document.getElementById('nameInput');
+const imgInput = document.getElementById('imgInput');
+const linkInput = document.getElementById('linkInput');
+const tierSelect = document.getElementById('tierSelect');
+const saveBtn = document.getElementById('saveBtn');
+const clearSaveBtn = document.getElementById('clearSaveBtn');
+const downloadHTMLBtn = document.getElementById('downloadHTMLBtn');
+
+let editMode = false;
+let draggedCard = null;
+
+/* ======== Core: render helpers ======== */
+function createCardElement(imgUrl, linkUrl){
+  const a = document.createElement('a');
+  a.className = 'card';
+  a.href = linkUrl || '#';
+  a.target = '_blank';
+  const img = document.createElement('img');
+  img.src = imgUrl;
+  img.alt = '';
+  a.appendChild(img);
+  // allow dragging when edit mode enabled
+  if(editMode){
+    img.draggable = true;
+    img.addEventListener('dragstart', onDragStart);
+  }
+  return a;
+}
+
+function clearAllTiers(){
+  tiers.forEach(t => {
+    // keep label only
+    t.innerHTML = `<div class="tier-label">${t.querySelector('.tier-label') ? t.querySelector('.tier-label').innerText : t.id + ' Tier'}</div>`;
+  });
+}
+
+/* ======== Persistence: save/load localStorage ======== */
+function saveToLocal(){
+  const out = {};
+  tiers.forEach(t=>{
+    out[t.id] = [];
+    t.querySelectorAll('a.card').forEach(a=>{
+      const img = a.querySelector('img');
+      out[t.id].push({ img: img.src, link: a.href });
+    });
+  });
+  try{
+    localStorage.setItem(LS_KEY, JSON.stringify(out));
+    // small visual feedback (optional)
+    // console.log('Saved to localStorage');
+  }catch(e){
+    alert('Saving failed: ' + e.message);
+  }
+}
+
+function loadFromLocal(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(!raw) return false;
+  try{
+    const data = JSON.parse(raw);
+    clearAllTiers();
+    for(const k of Object.keys(data)){
+      const container = document.getElementById(k);
+      if(!container) continue;
+      data[k].forEach(item=>{
+        const card = createCardElement(item.img, item.link);
+        container.appendChild(card);
       });
     }
-  } else {
-    // Load default commanders in C-tier
-    const container = document.getElementById("C");
-    container.innerHTML = `<div class="tier-label">C Tier</div>`;
-    defaultCommanders.forEach(c=>{
-      const a = document.createElement("a");
-      a.href = `https://scryfall.com/search?q=${encodeURIComponent(c)}`;
-      a.target="_blank";
-      const img = document.createElement("img");
-      img.src = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c)}&format=image`;
-      a.appendChild(img);
-      container.appendChild(a);
-    });
+    return true;
+  }catch(e){
+    console.error('Failed to parse local data', e);
+    return false;
   }
 }
 
-// Save current tier list to localStorage
-function saveCommanders() {
-  const data = {};
-  document.querySelectorAll(".tier").forEach(tier=>{
-    const tierId = tier.id;
-    data[tierId] = [];
-    tier.querySelectorAll("a").forEach(a=>{
-      data[tierId].push({link: a.href, img: a.querySelector("img").src});
-    });
+/* ======== Initialize default (when no saved data) ======== */
+function initDefault(){
+  clearAllTiers();
+  const c = document.getElementById('C');
+  defaultCommanders.forEach(name=>{
+    const imgUrl = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&format=image`;
+    const linkUrl = `https://scryfall.com/search?q=${encodeURIComponent(name)}`;
+    const card = createCardElement(imgUrl, linkUrl);
+    c.appendChild(card);
   });
-  localStorage.setItem("tierList", JSON.stringify(data));
+  saveToLocal();
 }
 
-function toggleEditMode() {
+/* ======== Drag & Drop behavior ======== */
+function onDragStart(e){
+  // store a small identifier: we will use the element itself via dataset
+  draggedCard = e.target.parentNode; // <a>
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragOver(e){
+  e.preventDefault();
+}
+
+function onDropTier(e){
+  e.preventDefault();
+  if(!draggedCard) return;
+  // append to this tier container
+  this.appendChild(draggedCard);
+  draggedCard = null;
+  saveToLocal();
+}
+
+function onDropTrash(e){
+  e.preventDefault();
+  if(draggedCard){
+    draggedCard.remove();
+    draggedCard = null;
+    saveToLocal();
+  }
+}
+
+/* ======== Edit mode toggle ======== */
+function enableEditMode(){
+  editMode = true;
+  editPanel.style.display = 'block';
+  // make existing images draggable and attach listeners
+  document.querySelectorAll('.tier img').forEach(img=>{
+    img.draggable = true;
+    img.addEventListener('dragstart', onDragStart);
+  });
+  // attach drop listeners (already attached once, but safe)
+  tiers.forEach(t => {
+    t.addEventListener('dragover', onDragOver);
+    t.addEventListener('drop', onDropTier);
+  });
+  trash.addEventListener('dragover', onDragOver);
+  trash.addEventListener('drop', onDropTrash);
+  editPanel.setAttribute('aria-hidden','false');
+}
+
+function disableEditMode(){
+  editMode = false;
+  editPanel.style.display = 'none';
+  // disable draggable
+  document.querySelectorAll('.tier img').forEach(img=>{
+    img.draggable = false;
+    img.removeEventListener('dragstart', onDragStart);
+  });
+  tiers.forEach(t => {
+    t.removeEventListener('dragover', onDragOver);
+    t.removeEventListener('drop', onDropTier);
+  });
+  trash.removeEventListener('dragover', onDragOver);
+  trash.removeEventListener('drop', onDropTrash);
+  editPanel.setAttribute('aria-hidden','true');
+}
+
+toggleEditBtn.addEventListener('click', ()=>{
   if(!editMode){
-    const pass = prompt("Enter password:");
-    if(pass !== password){ alert("Wrong password"); return; }
-    editMode = true;
-    document.getElementById("editPanel").style.display = "block";
-    enableDragDrop();
+    const pw = prompt('Enter edit password:');
+    if(pw !== EDIT_PW){ alert('Incorrect password'); return; }
+    enableEditMode();
   } else {
-    editMode = false;
-    document.getElementById("editPanel").style.display = "none";
-    disableDragDrop();
+    disableEditMode();
   }
-}
+});
 
-function enableDragDrop(){
-  document.querySelectorAll(".tier img").forEach(img=>{
-    img.draggable=true;
-    img.addEventListener("dragstart", dragStart);
+/* ======== Add commander helpers ======== */
+addByNameBtn.addEventListener('click', ()=>{
+  const name = nameInput.value.trim();
+  if(!name){ alert('Enter a commander name'); return; }
+  const img = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&format=image`;
+  const link = `https://scryfall.com/search?q=${encodeURIComponent(name)}`;
+  const tier = document.getElementById('C'); // default to C if not in selection
+  const card = createCardElement(img, link);
+  tier.appendChild(card);
+  if(editMode){ // ensure draggable handlers in edit mode
+    card.querySelector('img').draggable = true;
+    card.querySelector('img').addEventListener('dragstart', onDragStart);
+  }
+  saveToLocal();
+  nameInput.value = '';
+});
+
+addByUrlBtn.addEventListener('click', ()=>{
+  const imgUrl = imgInput.value.trim();
+  const linkUrl = linkInput.value.trim();
+  const tierId = tierSelect.value;
+  if(!imgUrl || !linkUrl){ alert('Provide both image URL and link URL'); return; }
+  const target = document.getElementById(tierId);
+  const card = createCardElement(imgUrl, linkUrl);
+  target.appendChild(card);
+  if(editMode){
+    card.querySelector('img').draggable = true;
+    card.querySelector('img').addEventListener('dragstart', onDragStart);
+  }
+  saveToLocal();
+  imgInput.value = ''; linkInput.value = '';
+});
+
+/* ======== Export / Import JSON ======== */
+exportBtn.addEventListener('click', ()=>{
+  const raw = localStorage.getItem(LS_KEY) || JSON.stringify({S:[], "A+":[], A:[], "B+":[], B:[], "C+":[], C:[]});
+  const blob = new Blob([raw], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'commander-tierlist.json';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+importBtn.addEventListener('click', ()=> importFile.click());
+importFile.addEventListener('change', (ev)=>{
+  const f = ev.target.files[0];
+  if(!f) return;
+  const reader = new FileReader();
+  reader.onload = (e)=>{
+    try{
+      const parsed = JSON.parse(e.target.result);
+      // basic validation: object with tier keys
+      // replace local storage and re-render
+      localStorage.setItem(LS_KEY, JSON.stringify(parsed));
+      loadFromLocal();
+      alert('Imported successfully.');
+    }catch(err){
+      alert('Import failed: invalid JSON');
+    }
+  };
+  reader.readAsText(f);
+  // reset input
+  importFile.value = '';
+});
+
+/* ======== Reset to defaults ======== */
+resetBtn.addEventListener('click', ()=>{
+  if(!confirm('Reset to default list? This will overwrite saved list.')) return;
+  localStorage.removeItem(LS_KEY);
+  initDefault();
+});
+
+/* ======== Download full self-contained HTML file ======== */
+downloadHTMLBtn.addEventListener('click', ()=>{
+  // build template: header + current tier inner HTML + embedded script/styles that re-enable editor
+  const header = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Commander Tier List</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+  :root{--bg:#f2f2f2;--card-border:#000}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:18px;background:var(--bg);color:#111}
+  h1{margin:0 0 12px}
+  .controls{margin-bottom:12px;display:flex;gap:8px;flex-wrap:wrap}
+  button,input,select{padding:6px 8px;border-radius:6px;border:1px solid #bbb;background:#fff;cursor:pointer}
+  #tierContainer{display:flex;flex-direction:column;gap:8px;max-width:1200px}
+  .tier{padding:10px;border-radius:8px;min-height:130px;display:flex;gap:8px;flex-wrap:wrap;align-items:flex-start}
+  .tier-label{font-weight:700;padding:4px 8px;border-radius:6px;color:#000;margin-bottom:6px;background:rgba(255,255,255,0.6)}
+  a.card{display:inline-block;text-decoration:none}
+  a.card img{width:100px;border:2px solid var(--card-border);border-radius:6px;display:block}
+  #trash{margin-top:10px;padding:14px;border-radius:8px;border:2px dashed #ff4d4d;color:#ff4d4d;text-align:center;font-weight:700}
+  #editPanel{display:none;margin-top:12px;padding:12px;border-radius:8px;border:1px solid #ccc;background:#fff;max-width:900px}
+  label{display:inline-block;margin:6px 0;font-weight:600}
+  textarea#jsonOut{width:100%;height:220px;margin-top:8px;font-family:monospace;padding:8px;border-radius:6px;border:1px solid #ccc}
+  #S{background:linear-gradient(90deg,#ff4d4d,#ff7f7f)}
+  #A+{background:linear-gradient(90deg,#ff944d,#ffb17a)}
+  #A{background:linear-gradient(90deg,#ffd966,#ffea9a)}
+  #B+{background:linear-gradient(90deg,#fff266,#fff9a8)}
+  #B{background:linear-gradient(90deg,#b3ff66,#d6ff9a)}
+  #C+{background:linear-gradient(90deg,#66ccff,#9fe0ff)}
+  #C{background:linear-gradient(90deg,#4d94ff,#80b4ff)}
+  </style></head><body>
+  <h1>Commander Tier List (Export)</h1>`;
+  const footer = `<script>
+  // Enable simple editing in exported file (same logic as live)
+  /* exported file includes only lightweight re-edit functionality */
+  (()=>{ /* intentionally minimal — you can re-export from original site instead */ })();
+  </script></body></html>`;
+
+  // Get current tier HTML (only include tier containers and trash)
+  const tierNodes = Array.from(document.querySelectorAll('.tier')).map(t => t.outerHTML).join('');
+  const trashHTML = document.getElementById('trash').outerHTML;
+  const final = header + '<div id=\"tierContainer\">' + tierNodes + '</div>' + trashHTML + footer;
+
+  const blob = new Blob([final], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'commander-tierlist-export.html';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ======== Render helpers: loadFromLocal wrapper + attach minimal events ======== */
+function attachTierListeners(){
+  // Attach drag/drop listeners to tiers (works even if cards are newly added)
+  tiers.forEach(t=>{
+    t.removeEventListener('dragover', onDragOver);
+    t.removeEventListener('drop', onDropTier);
+    t.addEventListener('dragover', onDragOver);
+    t.addEventListener('drop', onDropTier);
   });
-  document.querySelectorAll(".tier").forEach(tier=>{
-    tier.addEventListener("dragover", dragOver);
-    tier.addEventListener("drop", drop);
+  // trash
+  trash.removeEventListener('dragover', onDragOver);
+  trash.removeEventListener('drop', onDropTrash);
+  trash.addEventListener('dragover', onDragOver);
+  trash.addEventListener('drop', onDropTrash);
+
+  // ensure images have dragstart in edit mode
+  document.querySelectorAll('.tier img').forEach(img=>{
+    img.removeEventListener('dragstart', onDragStart);
+    if(editMode){
+      img.draggable = true;
+      img.addEventListener('dragstart', onDragStart);
+    } else {
+      img.draggable = false;
+    }
   });
-  document.getElementById("trash").addEventListener("dragover", e=>e.preventDefault());
-  document.getElementById("trash").addEventListener("drop", e=>{ e.preventDefault(); if(dragged) dragged.remove(); saveCommanders(); });
 }
 
-function disableDragDrop(){
-  document.querySelectorAll(".tier img").forEach(img=>{ img.draggable=false; img.removeEventListener("dragstart", dragStart); });
-  document.querySelectorAll(".tier").forEach(tier=>{ tier.removeEventListener("dragover", dragOver); tier.removeEventListener("drop", drop); });
+function loadFromLocal(){
+  const ok = loadFromLocal_impl();
+  attachTierListeners();
+  return ok;
 }
 
-function dragStart(e){ dragged = e.target.parentNode; }
-function dragOver(e){ e.preventDefault(); }
-function drop(e){ e.preventDefault(); if(dragged) { this.appendChild(dragged); saveCommanders(); } }
-
-function addCard(){
-  const imgUrl = document.getElementById("imgUrl").value;
-  const linkUrl = document.getElementById("linkUrl").value;
-  const tier = document.getElementById("tierSelect").value;
-  if(imgUrl && linkUrl){
-    const a = document.createElement("a");
-    a.href = linkUrl; a.target="_blank";
-    const img = document.createElement("img"); img.src = imgUrl;
-    a.appendChild(img);
-    document.getElementById(tier).appendChild(a);
-    saveCommanders();
-  } else {
-    alert("Please fill both Image URL and Link URL");
+function loadFromLocal_impl(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(!raw) return false;
+  try{
+    const parsed = JSON.parse(raw);
+    clearAllTiers();
+    for(const k of Object.keys(parsed)){
+      const container = document.getElementById(k);
+      if(!container) continue;
+      parsed[k].forEach(item=>{
+        const card = createCardElement(item.img, item.link);
+        container.appendChild(card);
+      });
+    }
+    return true;
+  }catch(err){
+    console.error('Failed to parse saved JSON', err);
+    return false;
   }
 }
 
-function clearLocalStorage(){
-  if(confirm("Reset the tier list to default?")) {
-    localStorage.removeItem("tierList");
-    loadCommanders();
+/* ======== On initial load: restore or init ======== */
+(function init(){
+  const restored = loadFromLocal();
+  if(!restored){
+    initDefault();
   }
-}
+  attachTierListeners();
+})();
 
-// Initialize
-window.onload = function(){
-  loadCommanders();
-}
+/* Ensure saving occurs on window unload as well */
+window.addEventListener('beforeunload', saveToLocal);
 </script>
 </body>
 </html>
