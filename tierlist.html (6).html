@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Commander Tier List</title>
+<style>
+body { font-family: sans-serif; margin:20px; background:#f2f2f2;}
+.tier { margin: 10px 0; padding: 10px; border-radius: 8px; min-height: 140px; display: flex; gap: 10px; flex-wrap: wrap;}
+img { width: 100px; border: 2px solid #000; border-radius: 6px; cursor: pointer;}
+.tier-label { padding: 5px; font-weight: bold; color: #fff; border-radius: 6px; margin-bottom: 5px;}
+#editPanel { display:none; margin-top:20px; padding:10px; border:1px solid #aaa; border-radius:6px; background:#fff;}
+button { padding:5px 10px; margin:2px; cursor:pointer;}
+</style>
+</head>
+<body>
+
+<h1>Commander Tier List</h1>
+<button onclick="toggleEditMode()">Toggle Edit Mode</button>
+
+<div id="tierContainer">
+  <div id="S" class="tier" style="background:#ff4d4d">
+    <div class="tier-label">S Tier</div>
+  </div>
+  <div id="A+" class="tier" style="background:#ff944d">
+    <div class="tier-label">A+ Tier</div>
+  </div>
+  <div id="A" class="tier" style="background:#ffd966">
+    <div class="tier-label">A Tier</div>
+  </div>
+  <div id="B+" class="tier" style="background:#ffff66">
+    <div class="tier-label">B+ Tier</div>
+  </div>
+  <div id="B" class="tier" style="background:#b3ff66">
+    <div class="tier-label">B Tier</div>
+  </div>
+  <div id="C+" class="tier" style="background:#66ccff">
+    <div class="tier-label">C+ Tier</div>
+  </div>
+  <div id="C" class="tier" style="background:#4d94ff">
+    <div class="tier-label">C Tier</div>
+  </div>
+</div>
+
+<div id="editPanel">
+  <h3>Add a Commander Card</h3>
+  Image URL: <input type="text" id="imgUrl" placeholder="Image URL"><br>
+  Link URL: <input type="text" id="linkUrl" placeholder="Link URL"><br>
+  Tier: 
+  <select id="tierSelect">
+    <option value="S">S</option>
+    <option value="A+">A+</option>
+    <option value="A">A</option>
+    <option value="B+">B+</option>
+    <option value="B">B</option>
+    <option value="C+">C+</option>
+    <option value="C">C</option>
+  </select><br>
+  <button onclick="addCard()">Add Card</button>
+  <button onclick="saveList()">Save List</button>
+</div>
+
+<script>
+let editMode = false;
+const password = "YOUR_PASSWORD"; // Change this to your password
+
+function toggleEditMode(){
+  if(!editMode){
+    let input = prompt("Enter password to edit:");
+    if(input !== password){
+      alert("Incorrect password");
+      return;
+    }
+    document.getElementById("editPanel").style.display = "block";
+    editMode = true;
+  } else {
+    document.getElementById("editPanel").style.display = "none";
+    editMode = false;
+  }
+}
+
+function addCard(){
+  const imgUrl = document.getElementById("imgUrl").value;
+  const linkUrl = document.getElementById("linkUrl").value;
+  const tier = document.getElementById("tierSelect").value;
+  if(imgUrl && linkUrl){
+    const a = document.createElement("a");
+    a.href = linkUrl;
+    a.target = "_blank";
+    const img = document.createElement("img");
+    img.src = imgUrl;
+    a.appendChild(img);
+    document.getElementById(tier).appendChild(a);
+  } else {
+    alert("Please fill in both Image URL and Link URL");
+  }
+}
+
+// Save tier list to local storage
+function saveList(){
+  const tiers = ["S","A+","A","B+","B","C+","C"];
+  const listData = {};
+  tiers.forEach(tier=>{
+    const cards = [];
+    document.getElementById(tier).querySelectorAll("a").forEach(a=>{
+      cards.push({img:a.querySelector("img").src, link:a.href});
+    });
+    listData[tier] = cards;
+  });
+  localStorage.setItem("commanderTierList", JSON.stringify(listData));
+  alert("Tier list saved locally!");
+}
+
+// Load tier list from local storage
+window.onload = function(){
+  const saved = localStorage.getItem("commanderTierList");
+  if(saved){
+    const data = JSON.parse(saved);
+    for(const tier in data){
+      data[tier].forEach(card=>{
+        const a = document.createElement("a");
+        a.href = card.link;
+        a.target="_blank";
+        const img = document.createElement("img");
+        img.src = card.img;
+        a.appendChild(img);
+        document.getElementById(tier).appendChild(a);
+      });
+    }
+  }
+}
+</script>
+
+</body>
+</html>
