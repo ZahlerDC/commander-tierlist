@@ -7,10 +7,11 @@
 body { font-family: sans-serif; margin:20px; background:#f2f2f2;}
 .tier { margin: 10px 0; padding: 10px; border-radius: 8px; min-height: 140px; display: flex; gap: 10px; flex-wrap: wrap;}
 img { width: 100px; border: 2px solid #000; border-radius: 6px; cursor: pointer;}
-.tier-label { padding: 5px; font-weight: bold; color: #000; border-radius: 6px; margin-bottom: 5px;} /* Black letters */
+.tier-label { padding: 5px; font-weight: bold; color: #000; border-radius: 6px; margin-bottom: 5px;}
 #editPanel { display:none; margin-top:20px; padding:10px; border:1px solid #aaa; border-radius:6px; background:#fff;}
 button { padding:5px 10px; margin:2px; cursor:pointer;}
 #htmlOutput { width:100%; height:400px; margin-top:10px;}
+#trash { margin-top:20px; padding:20px; border:2px dashed #ff0000; text-align:center; font-weight:bold; color:#ff0000; border-radius:8px; }
 </style>
 </head>
 <body>
@@ -42,6 +43,8 @@ button { padding:5px 10px; margin:2px; cursor:pointer;}
   </div>
 </div>
 
+<div id="trash">🗑 Drag here to remove a commander</div>
+
 <div id="editPanel">
   <h3>Add a Commander Card</h3>
   Image URL: <input type="text" id="imgUrl" placeholder="Image URL"><br>
@@ -66,7 +69,6 @@ let editMode = false;
 const password = "Rahzel";
 let dragged;
 
-// Toggle edit mode
 function toggleEditMode(){
   if(!editMode){
     let input = prompt("Enter password to edit:");
@@ -84,7 +86,6 @@ function toggleEditMode(){
   }
 }
 
-// Drag and drop functions
 function enableDragAndDrop(){
   const images = document.querySelectorAll(".tier img");
   images.forEach(img=>{
@@ -95,6 +96,12 @@ function enableDragAndDrop(){
   tiers.forEach(tier=>{
     tier.addEventListener("dragover", dragOver);
     tier.addEventListener("drop", drop);
+  });
+  const trash = document.getElementById("trash");
+  trash.addEventListener("dragover", e => e.preventDefault());
+  trash.addEventListener("drop", e => {
+    e.preventDefault();
+    if(dragged){ dragged.remove(); }
   });
 }
 
@@ -115,7 +122,6 @@ function dragStart(e){ dragged = e.target.parentNode; }
 function dragOver(e){ e.preventDefault(); }
 function drop(e){ e.preventDefault(); if(dragged){ this.appendChild(dragged); } }
 
-// Add new card
 function addCard(){
   const imgUrl = document.getElementById("imgUrl").value;
   const linkUrl = document.getElementById("linkUrl").value;
@@ -133,7 +139,6 @@ function addCard(){
   }
 }
 
-// Generate full HTML
 function generateHTML(){
   const htmlHeader = `<!DOCTYPE html>
 <html>
@@ -151,11 +156,7 @@ img { width: 100px; border: 2px solid #000; border-radius: 6px; cursor: pointer;
 <h1>Commander Tier List</h1>
 <div id="tierContainer">`;
   
-  const htmlFooter = `
-</div>
-</body>
-</html>`;
-
+  const htmlFooter = `</div></body></html>`;
   const tiers = document.querySelectorAll(".tier");
   let bodyHTML = "";
   tiers.forEach(tier=>{
@@ -167,7 +168,6 @@ img { width: 100px; border: 2px solid #000; border-radius: 6px; cursor: pointer;
     innerHTML += `</div>`;
     bodyHTML += innerHTML;
   });
-
   document.getElementById("htmlOutput").value = htmlHeader + bodyHTML + htmlFooter;
 }
 
@@ -185,26 +185,4 @@ window.onload = function(){
     "Lilah, Undefeated Slickshot","Magus Lucea Kane","Mirko, Obsessive Theorist",
     "Mogis, God of Slaughter","Nekusar, the Mindrazer","Niv-Mizzet, Parun",
     "Obeka, Splitter of Seconds","Pantlaza, Sun-Favored","Rakdos, Lord of Riots",
-    "Ruric Thar, the Unbowed","Satya, Aetherflux Genius","Sidar Jabari of Zhalfir",
-    "Sivitri, Dragon Master","Tasha, the Witch Queen","Thantis, the Warweaver",
-    "The Beamtown Bullies","The Infamous Cruelclaw","The Thirteenth Doctor",
-    "The Twelfth Doctor","Tuvasa, the Sunlit","Ulalek, Fused Atrocity",
-    "Umbris, Fear Manifest","Urza, Chief Artificer","Volo, Guide to Monsters",
-    "Wick, the Whorled Mind","Wulfgar of Icewind Dale","Ygra, Eater of All",
-    "Yuma, Proud Protector"
-  ];
-
-  commanders.forEach(c=>{
-    const a = document.createElement("a");
-    a.href = `https://scryfall.com/search?q=${encodeURIComponent(c)}`;
-    a.target="_blank";
-    const img = document.createElement("img");
-    img.src = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c)}&format=image`;
-    a.appendChild(img);
-    document.getElementById("C").appendChild(a);
-  });
-}
-</script>
-
-</body>
-</html>
+    "R
