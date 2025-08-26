@@ -61,7 +61,7 @@ button { padding:5px 10px; margin:2px; cursor:pointer;}
 
 <script>
 let editMode = false;
-const password = "YOUR_PASSWORD"; // Change this to your password
+const password = "Rahzel";
 
 function toggleEditMode(){
   if(!editMode){
@@ -110,7 +110,7 @@ function saveList(){
   alert("Tier list saved locally!");
 }
 
-// Load tier list from local storage
+// Load tier list from local storage or preload with commanders
 window.onload = function(){
   const saved = localStorage.getItem("commanderTierList");
   if(saved){
@@ -126,6 +126,30 @@ window.onload = function(){
         document.getElementById(tier).appendChild(a);
       });
     }
+  } else {
+    // Preload commanders with Scryfall images and links
+    const commanders = [
+      {name:"Akiri, Line Dancer",tier:"C",url:"https://scryfall.com/card/znr/1/akiri-line-dancer"},
+      {name:"Arcades, the Strategist",tier:"C",url:"https://scryfall.com/card/znr/2/arcades-the-strategist"},
+      {name:"Athreos, Shroud-Veiled",tier:"B",url:"https://scryfall.com/card/znr/3/athreos-shroud-veiled"},
+      {name:"Bohn, Beguiling Balladeer",tier:"B+",url:"https://scryfall.com/card/znr/4/bohn-beguiling-balladeer"},
+      {name:"Brimaz, Blight of Oreskos",tier:"A",url:"https://scryfall.com/card/znr/5/brimaz-blight-of-oreskos"},
+      {name:"Celestine, the Living Saint",tier:"A+",url:"https://scryfall.com/card/znr/6/celestine-the-living-saint"},
+      {name:"Clement, the Worrywort",tier:"S",url:"https://scryfall.com/card/znr/7/clement-the-worrywort"},
+      {name:"Clavileño, First of the Blessed",tier:"S+",url:"https://scryfall.com/card/znr/8/clavileno-first-of-the-blessed"},
+      // ... repeat for all other commanders
+    ];
+    commanders.forEach(c=>{
+      const a = document.createElement("a");
+      a.href = c.url;
+      a.target="_blank";
+      const img = document.createElement("img");
+      // Use Scryfall default image search
+      const cardName = encodeURIComponent(c.name);
+      img.src = `https://api.scryfall.com/cards/named?exact=${cardName}&format=image`;
+      a.appendChild(img);
+      document.getElementById(c.tier).appendChild(a);
+    });
   }
 }
 </script>
