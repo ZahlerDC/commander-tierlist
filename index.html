@@ -20,27 +20,13 @@ button { padding:5px 10px; margin:2px; cursor:pointer;}
 <button onclick="toggleEditMode()">Toggle Edit Mode</button>
 
 <div id="tierContainer">
-  <div id="S" class="tier" style="background:#ff4d4d">
-    <div class="tier-label">S Tier</div>
-  </div>
-  <div id="A+" class="tier" style="background:#ff944d">
-    <div class="tier-label">A+ Tier</div>
-  </div>
-  <div id="A" class="tier" style="background:#ffd966">
-    <div class="tier-label">A Tier</div>
-  </div>
-  <div id="B+" class="tier" style="background:#ffff66">
-    <div class="tier-label">B+ Tier</div>
-  </div>
-  <div id="B" class="tier" style="background:#b3ff66">
-    <div class="tier-label">B Tier</div>
-  </div>
-  <div id="C+" class="tier" style="background:#66ccff">
-    <div class="tier-label">C+ Tier</div>
-  </div>
-  <div id="C" class="tier" style="background:#4d94ff">
-    <div class="tier-label">C Tier</div>
-  </div>
+  <div id="S" class="tier" style="background:#ff4d4d"><div class="tier-label">S Tier</div></div>
+  <div id="A+" class="tier" style="background:#ff944d"><div class="tier-label">A+ Tier</div></div>
+  <div id="A" class="tier" style="background:#ffd966"><div class="tier-label">A Tier</div></div>
+  <div id="B+" class="tier" style="background:#ffff66"><div class="tier-label">B+ Tier</div></div>
+  <div id="B" class="tier" style="background:#b3ff66"><div class="tier-label">B Tier</div></div>
+  <div id="C+" class="tier" style="background:#66ccff"><div class="tier-label">C+ Tier</div></div>
+  <div id="C" class="tier" style="background:#4d94ff"><div class="tier-label">C Tier</div></div>
 </div>
 
 <div id="trash">🗑 Drag here to remove a commander</div>
@@ -51,31 +37,25 @@ button { padding:5px 10px; margin:2px; cursor:pointer;}
   Link URL: <input type="text" id="linkUrl" placeholder="Link URL"><br>
   Tier: 
   <select id="tierSelect">
-    <option value="S">S</option>
-    <option value="A+">A+</option>
-    <option value="A">A</option>
-    <option value="B+">B+</option>
-    <option value="B">B</option>
-    <option value="C+">C+</option>
+    <option value="S">S</option><option value="A+">A+</option><option value="A">A</option>
+    <option value="B+">B+</option><option value="B">B</option><option value="C+">C+</option>
     <option value="C" selected>C</option>
   </select><br>
   <button onclick="addCard()">Add Card</button>
   <button onclick="generateHTML()">Generate HTML</button>
+  <button onclick="downloadHTML()">Download HTML</button>
   <textarea id="htmlOutput" readonly placeholder="Generated HTML will appear here"></textarea>
 </div>
 
 <script>
 let editMode = false;
-const password = "Rahzel";
+const password = "zz";
 let dragged;
 
 function toggleEditMode(){
   if(!editMode){
     let input = prompt("Enter password to edit:");
-    if(input !== password){
-      alert("Incorrect password");
-      return;
-    }
+    if(input !== password){ alert("Incorrect password"); return; }
     editMode = true;
     document.getElementById("editPanel").style.display = "block";
     enableDragAndDrop();
@@ -99,23 +79,14 @@ function enableDragAndDrop(){
   });
   const trash = document.getElementById("trash");
   trash.addEventListener("dragover", e => e.preventDefault());
-  trash.addEventListener("drop", e => {
-    e.preventDefault();
-    if(dragged){ dragged.remove(); }
-  });
+  trash.addEventListener("drop", e => { e.preventDefault(); if(dragged){ dragged.remove(); } });
 }
 
 function disableDragAndDrop(){
   const images = document.querySelectorAll(".tier img");
-  images.forEach(img=>{
-    img.draggable = false;
-    img.removeEventListener("dragstart", dragStart);
-  });
+  images.forEach(img=>{ img.draggable=false; img.removeEventListener("dragstart", dragStart); });
   const tiers = document.querySelectorAll(".tier");
-  tiers.forEach(tier=>{
-    tier.removeEventListener("dragover", dragOver);
-    tier.removeEventListener("drop", drop);
-  });
+  tiers.forEach(tier=>{ tier.removeEventListener("dragover", dragOver); tier.removeEventListener("drop", drop); });
 }
 
 function dragStart(e){ dragged = e.target.parentNode; }
@@ -127,79 +98,47 @@ function addCard(){
   const linkUrl = document.getElementById("linkUrl").value;
   const tier = document.getElementById("tierSelect").value;
   if(imgUrl && linkUrl){
-    const a = document.createElement("a");
-    a.href = linkUrl;
-    a.target = "_blank";
-    const img = document.createElement("img");
-    img.src = imgUrl;
-    a.appendChild(img);
+    const a=document.createElement("a"); a.href=linkUrl; a.target="_blank";
+    const img=document.createElement("img"); img.src=imgUrl; a.appendChild(img);
     document.getElementById(tier).appendChild(a);
-  } else {
-    alert("Please fill in both Image URL and Link URL");
-  }
+  } else { alert("Please fill in both Image URL and Link URL"); }
 }
 
+// Template-based HTML generator
 function generateHTML(){
-  const header = `<!DOCTYPE html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>Commander Tier List</title>
-<style>
-body { font-family: sans-serif; margin:20px; background:#f2f2f2;}
-.tier { margin: 10px 0; padding: 10px; border-radius: 8px; min-height: 140px; display: flex; gap: 10px; flex-wrap: wrap;}
-img { width: 100px; border: 2px solid #000; border-radius: 6px; cursor: pointer;}
-.tier-label { padding: 5px; font-weight: bold; color: #000; border-radius: 6px; margin-bottom: 5px;}
-#editPanel { display:none; margin-top:20px; padding:10px; border:1px solid #aaa; border-radius:6px; background:#fff;}
-button { padding:5px 10px; margin:2px; cursor:pointer;}
-#htmlOutput { width:100%; height:400px; margin-top:10px;}
-#trash { margin-top:20px; padding:20px; border:2px dashed #ff0000; text-align:center; font-weight:bold; color:#ff0000; border-radius:8px; }
-</style>
-</head>
-<body>
-<h1>Commander Tier List</h1>
-<button onclick="toggleEditMode()">Toggle Edit Mode</button>
-<div id="tierContainer">`;
-
-  const tiers = document.querySelectorAll(".tier");
-  let bodyHTML = "";
-  tiers.forEach(tier=>{
+  const templateStart = `
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Commander Tier List</title><style>
+body{font-family:sans-serif;margin:20px;background:#f2f2f2;}
+.tier{margin:10px 0;padding:10px;border-radius:8px;min-height:140px;display:flex;gap:10px;flex-wrap:wrap;}
+img{width:100px;border:2px solid #000;border-radius:6px;cursor:pointer;}
+.tier-label{padding:5px;font-weight:bold;color:#000;border-radius:6px;margin-bottom:5px;}
+#trash{margin-top:20px;padding:20px;border:2px dashed #ff0000;text-align:center;font-weight:bold;color:#ff0000;border-radius:8px;}
+</style></head><body>
+<h1>Commander Tier List</h1><div id="tierContainer">`;
+  let templateMiddle = "";
+  document.querySelectorAll(".tier").forEach(tier=>{
     let tierHTML = `<div id="${tier.id}" class="tier" style="background:${tier.style.background}"><div class="tier-label">${tier.querySelector(".tier-label").innerText}</div>`;
     tier.querySelectorAll("a").forEach(a=>{
-      const img = a.querySelector("img");
-      tierHTML += `<a href="${a.href}" target="_blank"><img src="${img.src}"></a>`;
+      tierHTML += `<a href="${a.href}" target="_blank"><img src="${a.querySelector("img").src}"></a>`;
     });
     tierHTML += `</div>`;
-    bodyHTML += tierHTML;
+    templateMiddle += tierHTML;
   });
+  const templateEnd = `</div><div id="trash">🗑 Drag here to remove a commander</div></body></html>`;
+  document.getElementById("htmlOutput").value = templateStart + templateMiddle + templateEnd;
+}
 
-  const footer = `</div>
-<div id="trash">🗑 Drag here to remove a commander</div>
-<div id="editPanel">
-<h3>Add a Commander Card</h3>
-Image URL: <input type="text" id="imgUrl" placeholder="Image URL"><br>
-Link URL: <input type="text" id="linkUrl" placeholder="Link URL"><br>
-Tier: 
-<select id="tierSelect">
-<option value="S">S</option><option value="A+">A+</option><option value="A">A</option>
-<option value="B+">B+</option><option value="B">B</option><option value="C+">C+</option>
-<option value="C" selected>C</option>
-</select><br>
-<button onclick="addCard()">Add Card</button>
-<button onclick="generateHTML()">Generate HTML</button>
-<textarea id="htmlOutput" readonly placeholder="Generated HTML will appear here"></textarea>
-</div>
-<script>
-${document.querySelector("script").innerHTML}
-</script>
-</body>
-</html>`;
-
-  document.getElementById("htmlOutput").value = header + bodyHTML + footer;
+function downloadHTML(){
+  generateHTML();
+  const blob = new Blob([document.getElementById("htmlOutput").value], {type:"text/html"});
+  const url = URL.createObjectURL(blob);
+  const a=document.createElement("a"); a.href=url; a.download="commander-tierlist.html"; a.click();
+  URL.revokeObjectURL(url);
 }
 
 window.onload = function(){
-  const commanders = [
+  const commanders=[
     "Akiri, Line Dancer","Arcades, the Strategist","Athreos, Shroud-Veiled",
     "Bohn, Beguiling Balladeer","Brimaz, Blight of Oreskos","Celestine, the Living Saint",
     "Clement, the Worrywort","Clavileño, First of the Blessed","Coram, the Undertaker",
@@ -219,15 +158,11 @@ window.onload = function(){
     "Wick, the Whorled Mind","Wulfgar of Icewind Dale","Ygra, Eater of All",
     "Yuma, Proud Protector"
   ];
-
   commanders.forEach(c=>{
-    const a = document.createElement("a");
-    a.href = `https://scryfall.com/search?q=${encodeURIComponent(c)}`;
-    a.target="_blank";
-    const img = document.createElement("img");
-    img.src = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c)}&format=image`;
-    a.appendChild(img);
-    document.getElementById("C").appendChild(a);
+    const a=document.createElement("a"); a.href=`https://scryfall.com/search?q=${encodeURIComponent(c)}`;
+    a.target="_blank"; const img=document.createElement("img");
+    img.src=`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c)}&format=image`;
+    a.appendChild(img); document.getElementById("C").appendChild(a);
   });
 }
 </script>
