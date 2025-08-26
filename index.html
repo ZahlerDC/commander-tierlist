@@ -7,9 +7,10 @@
 body { font-family: sans-serif; margin:20px; background:#f2f2f2;}
 .tier { margin: 10px 0; padding: 10px; border-radius: 8px; min-height: 140px; display: flex; gap: 10px; flex-wrap: wrap;}
 img { width: 100px; border: 2px solid #000; border-radius: 6px; cursor: pointer;}
-.tier-label { padding: 5px; font-weight: bold; color: #000; border-radius: 6px; margin-bottom: 5px;} /* Letters in black */
+.tier-label { padding: 5px; font-weight: bold; color: #000; border-radius: 6px; margin-bottom: 5px;} /* Black letters */
 #editPanel { display:none; margin-top:20px; padding:10px; border:1px solid #aaa; border-radius:6px; background:#fff;}
 button { padding:5px 10px; margin:2px; cursor:pointer;}
+#htmlOutput { width:100%; height:400px; margin-top:10px;}
 </style>
 </head>
 <body>
@@ -56,7 +57,8 @@ button { padding:5px 10px; margin:2px; cursor:pointer;}
     <option value="C" selected>C</option>
   </select><br>
   <button onclick="addCard()">Add Card</button>
-  <button onclick="saveList()">Save List</button>
+  <button onclick="generateHTML()">Generate HTML</button>
+  <textarea id="htmlOutput" readonly placeholder="Generated HTML will appear here"></textarea>
 </div>
 
 <script>
@@ -82,7 +84,7 @@ function toggleEditMode(){
   }
 }
 
-// Enable drag-and-drop for all cards
+// Drag and drop functions
 function enableDragAndDrop(){
   const images = document.querySelectorAll(".tier img");
   images.forEach(img=>{
@@ -96,7 +98,6 @@ function enableDragAndDrop(){
   });
 }
 
-// Disable drag-and-drop
 function disableDragAndDrop(){
   const images = document.querySelectorAll(".tier img");
   images.forEach(img=>{
@@ -110,20 +111,9 @@ function disableDragAndDrop(){
   });
 }
 
-function dragStart(e){
-  dragged = e.target.parentNode; // <a> element
-}
-
-function dragOver(e){
-  e.preventDefault();
-}
-
-function drop(e){
-  e.preventDefault();
-  if(dragged){
-    this.appendChild(dragged);
-  }
-}
+function dragStart(e){ dragged = e.target.parentNode; }
+function dragOver(e){ e.preventDefault(); }
+function drop(e){ e.preventDefault(); if(dragged){ this.appendChild(dragged); } }
 
 // Add new card
 function addCard(){
@@ -143,106 +133,78 @@ function addCard(){
   }
 }
 
-// Save tier list to local storage
-function saveList(){
-  const tiers = ["S","A+","A","B+","B","C+","C"];
-  const listData = {};
+// Generate full HTML
+function generateHTML(){
+  const htmlHeader = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Commander Tier List</title>
+<style>
+body { font-family: sans-serif; margin:20px; background:#f2f2f2;}
+.tier { margin: 10px 0; padding: 10px; border-radius: 8px; min-height: 140px; display: flex; gap: 10px; flex-wrap: wrap;}
+img { width: 100px; border: 2px solid #000; border-radius: 6px; cursor: pointer;}
+.tier-label { padding: 5px; font-weight: bold; color: #000; border-radius: 6px; margin-bottom: 5px;}
+</style>
+</head>
+<body>
+<h1>Commander Tier List</h1>
+<div id="tierContainer">`;
+  
+  const htmlFooter = `
+</div>
+</body>
+</html>`;
+
+  const tiers = document.querySelectorAll(".tier");
+  let bodyHTML = "";
   tiers.forEach(tier=>{
-    const cards = [];
-    document.getElementById(tier).querySelectorAll("a").forEach(a=>{
-      cards.push({img:a.querySelector("img").src, link:a.href});
+    let innerHTML = `<div id="${tier.id}" class="tier" style="background:${tier.style.background}"><div class="tier-label">${tier.querySelector(".tier-label").innerText}</div>`;
+    tier.querySelectorAll("a").forEach(a=>{
+      const img = a.querySelector("img");
+      innerHTML += `<a href="${a.href}" target="_blank"><img src="${img.src}"></a>`;
     });
-    listData[tier] = cards;
+    innerHTML += `</div>`;
+    bodyHTML += innerHTML;
   });
-  localStorage.setItem("commanderTierList", JSON.stringify(listData));
-  alert("Tier list saved locally!");
+
+  document.getElementById("htmlOutput").value = htmlHeader + bodyHTML + htmlFooter;
 }
 
-// Load tier list
+// Preload all commanders in C tier
 window.onload = function(){
-  const saved = localStorage.getItem("commanderTierList");
-  if(saved){
-    const data = JSON.parse(saved);
-    for(const tier in data){
-      data[tier].forEach(card=>{
-        const a = document.createElement("a");
-        a.href = card.link;
-        a.target="_blank";
-        const img = document.createElement("img");
-        img.src = card.img;
-        a.appendChild(img);
-        document.getElementById(tier).appendChild(a);
-      });
-    }
-  } else {
-    // Preload all commanders in C tier
-    const commanders = [
-      "Akiri, Line Dancer",
-      "Arcades, the Strategist",
-      "Athreos, Shroud-Veiled",
-      "Bohn, Beguiling Balladeer",
-      "Brimaz, Blight of Oreskos",
-      "Celestine, the Living Saint",
-      "Clement, the Worrywort",
-      "Clavileño, First of the Blessed",
-      "Coram, the Undertaker",
-      "Dihada, Binder of Wills",
-      "Ellivere of the Wild Court",
-      "Eriette, the Beguiler",
-      "Esix, Fractal Bloom",
-      "Felix Five-Boots",
-      "Geralf, the Fleshwright",
-      "Gornog, the Red Reaper",
-      "Gylwain, Casting Director",
-      "Jetmir, Nexus of Revels",
-      "Kadena, Slinking Sorcerer",
-      "King of the Forest",
-      "Lagrella, the Magpie",
-      "Lathliss, Dragon Queen",
-      "Lazav, Dimir Mastermind",
-      "Liberty Prime, Recharged",
-      "Lilah, Undefeated Slickshot",
-      "Magus Lucea Kane",
-      "Mirko, Obsessive Theorist",
-      "Mogis, God of Slaughter",
-      "Nekusar, the Mindrazer",
-      "Niv-Mizzet, Parun",
-      "Obeka, Splitter of Seconds",
-      "Pantlaza, Sun-Favored",
-      "Rakdos, Lord of Riots",
-      "Ruric Thar, the Unbowed",
-      "Satya, Aetherflux Genius",
-      "Sidar Jabari of Zhalfir",
-      "Sivitri, Dragon Master",
-      "Tasha, the Witch Queen",
-      "Thantis, the Warweaver",
-      "The Beamtown Bullies",
-      "The Infamous Cruelclaw",
-      "The Thirteenth Doctor",
-      "The Twelfth Doctor",
-      "Tuvasa, the Sunlit",
-      "Ulalek, Fused Atrocity",
-      "Umbris, Fear Manifest",
-      "Urza, Chief Artificer",
-      "Volo, Guide to Monsters",
-      "Wick, the Whorled Mind",
-      "Wulfgar of Icewind Dale",
-      "Ygra, Eater of All",
-      "Yuma, Proud Protector"
-    ];
-    commanders.forEach(c=>{
-      const a = document.createElement("a");
-      a.href = `https://scryfall.com/search?q=${encodeURIComponent(c)}`;
-      a.target="_blank";
-      const img = document.createElement("img");
-      img.src = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c)}&format=image`;
-      a.appendChild(img);
-      document.getElementById("C").appendChild(a);
-    });
-  }
+  const commanders = [
+    "Akiri, Line Dancer","Arcades, the Strategist","Athreos, Shroud-Veiled",
+    "Bohn, Beguiling Balladeer","Brimaz, Blight of Oreskos","Celestine, the Living Saint",
+    "Clement, the Worrywort","Clavileño, First of the Blessed","Coram, the Undertaker",
+    "Dihada, Binder of Wills","Ellivere of the Wild Court","Eriette, the Beguiler",
+    "Esix, Fractal Bloom","Felix Five-Boots","Geralf, the Fleshwright",
+    "Gornog, the Red Reaper","Gylwain, Casting Director","Jetmir, Nexus of Revels",
+    "Kadena, Slinking Sorcerer","King of the Forest","Lagrella, the Magpie",
+    "Lathliss, Dragon Queen","Lazav, Dimir Mastermind","Liberty Prime, Recharged",
+    "Lilah, Undefeated Slickshot","Magus Lucea Kane","Mirko, Obsessive Theorist",
+    "Mogis, God of Slaughter","Nekusar, the Mindrazer","Niv-Mizzet, Parun",
+    "Obeka, Splitter of Seconds","Pantlaza, Sun-Favored","Rakdos, Lord of Riots",
+    "Ruric Thar, the Unbowed","Satya, Aetherflux Genius","Sidar Jabari of Zhalfir",
+    "Sivitri, Dragon Master","Tasha, the Witch Queen","Thantis, the Warweaver",
+    "The Beamtown Bullies","The Infamous Cruelclaw","The Thirteenth Doctor",
+    "The Twelfth Doctor","Tuvasa, the Sunlit","Ulalek, Fused Atrocity",
+    "Umbris, Fear Manifest","Urza, Chief Artificer","Volo, Guide to Monsters",
+    "Wick, the Whorled Mind","Wulfgar of Icewind Dale","Ygra, Eater of All",
+    "Yuma, Proud Protector"
+  ];
+
+  commanders.forEach(c=>{
+    const a = document.createElement("a");
+    a.href = `https://scryfall.com/search?q=${encodeURIComponent(c)}`;
+    a.target="_blank";
+    const img = document.createElement("img");
+    img.src = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(c)}&format=image`;
+    a.appendChild(img);
+    document.getElementById("C").appendChild(a);
+  });
 }
 </script>
 
 </body>
 </html>
-
