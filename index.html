@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
@@ -29,7 +29,6 @@
   #B{background:linear-gradient(90deg,#b3ff66,#d6ff9a)}
   #C+{background:linear-gradient(90deg,#66ccff,#9fe0ff)}
   #C{background:linear-gradient(90deg,#4d94ff,#80b4ff)}
-  /* small screens */
   @media (max-width:700px){
     a.card img{width:78px}
     .tier{min-height:100px}
@@ -95,11 +94,9 @@
   </div>
 
 <script>
-/* ======== Configuration ======== */
-const EDIT_PW = 'zz';           // password for edit mode
-const LS_KEY = 'commander_tierlist_v1'; // localStorage key
+const EDIT_PW = 'zz';
+const LS_KEY = 'commander_tierlist_v1';
 
-/* ======== Default Commander Names (start in C) ======== */
 const defaultCommanders = [
   "Akiri, Line Dancer","Arcades, the Strategist","Athreos, Shroud-Veiled",
   "Bohn, Beguiling Balladeer","Brimaz, Blight of Oreskos","Celestine, the Living Saint",
@@ -121,7 +118,6 @@ const defaultCommanders = [
   "Yuma, Proud Protector"
 ];
 
-/* ======== Helper DOM getters ======== */
 const tiers = ['S','A+','A','B+','B','C+','C'].map(id => document.getElementById(id));
 const trash = document.getElementById('trash');
 const editPanel = document.getElementById('editPanel');
@@ -143,7 +139,6 @@ const downloadHTMLBtn = document.getElementById('downloadHTMLBtn');
 let editMode = false;
 let draggedCard = null;
 
-/* ======== Core: render helpers ======== */
 function createCardElement(imgUrl, linkUrl){
   const a = document.createElement('a');
   a.className = 'card';
@@ -153,7 +148,6 @@ function createCardElement(imgUrl, linkUrl){
   img.src = imgUrl;
   img.alt = '';
   a.appendChild(img);
-  // allow dragging when edit mode enabled
   if(editMode){
     img.draggable = true;
     img.addEventListener('dragstart', onDragStart);
@@ -163,7 +157,6 @@ function createCardElement(imgUrl, linkUrl){
 
 function clearAllTiers(){
   tiers.forEach(t => {
-    // keep label only
     t.innerHTML = `<div class="tier-label">${t.querySelector('.tier-label') ? t.querySelector('.tier-label').innerText : t.id + ' Tier'}</div>`;
   });
 }
@@ -180,8 +173,6 @@ function saveToLocal(){
   });
   try{
     localStorage.setItem(LS_KEY, JSON.stringify(out));
-    // small visual feedback (optional)
-    // console.log('Saved to localStorage');
   }catch(e){
     alert('Saving failed: ' + e.message);
   }
@@ -223,8 +214,7 @@ function initDefault(){
 
 /* ======== Drag & Drop behavior ======== */
 function onDragStart(e){
-  // store a small identifier: we will use the element itself via dataset
-  draggedCard = e.target.parentNode; // <a>
+  draggedCard = e.target.parentNode;
   e.dataTransfer.effectAllowed = 'move';
 }
 
@@ -235,7 +225,6 @@ function onDragOver(e){
 function onDropTier(e){
   e.preventDefault();
   if(!draggedCard) return;
-  // append to this tier container
   this.appendChild(draggedCard);
   draggedCard = null;
   saveToLocal();
@@ -254,12 +243,10 @@ function onDropTrash(e){
 function enableEditMode(){
   editMode = true;
   editPanel.style.display = 'block';
-  // make existing images draggable and attach listeners
   document.querySelectorAll('.tier img').forEach(img=>{
     img.draggable = true;
     img.addEventListener('dragstart', onDragStart);
   });
-  // attach drop listeners (already attached once, but safe)
   tiers.forEach(t => {
     t.addEventListener('dragover', onDragOver);
     t.addEventListener('drop', onDropTier);
@@ -272,7 +259,6 @@ function enableEditMode(){
 function disableEditMode(){
   editMode = false;
   editPanel.style.display = 'none';
-  // disable draggable
   document.querySelectorAll('.tier img').forEach(img=>{
     img.draggable = false;
     img.removeEventListener('dragstart', onDragStart);
@@ -302,10 +288,10 @@ addByNameBtn.addEventListener('click', ()=>{
   if(!name){ alert('Enter a commander name'); return; }
   const img = `https://api.scryfall.com/cards/named?exact=${encodeURIComponent(name)}&format=image`;
   const link = `https://scryfall.com/search?q=${encodeURIComponent(name)}`;
-  const tier = document.getElementById('C'); // default to C if not in selection
+  const tier = document.getElementById('C');
   const card = createCardElement(img, link);
   tier.appendChild(card);
-  if(editMode){ // ensure draggable handlers in edit mode
+  if(editMode){
     card.querySelector('img').draggable = true;
     card.querySelector('img').addEventListener('dragstart', onDragStart);
   }
@@ -329,9 +315,32 @@ addByUrlBtn.addEventListener('click', ()=>{
   imgInput.value = ''; linkInput.value = '';
 });
 
-/* ======== Export / Import JSON ======== */
+/* ======== Export / Import JSON (core logic) ======== */
+function getCurrentTierList(){
+  const out = {};
+  tiers.forEach(t=>{
+    out[t.id] = [];
+    t.querySelectorAll('a.card').forEach(a=>{
+      const img = a.querySelector('img');
+      let commanderName = '';
+      // Try to extract commander name from Scryfall URL if possible
+      if(a.href.includes('scryfall.com/search?q=')){
+        commanderName = decodeURIComponent(a.href.split('q=')[1]);
+      }
+      out[t.id].push({
+        name: commanderName,
+        img: img.src,
+        link: a.href
+      });
+    });
+  });
+  return out;
+}
+
 exportBtn.addEventListener('click', ()=>{
-  const raw = localStorage.getItem(LS_KEY) || JSON.stringify({S:[], "A+":[], A:[], "B+":[], B:[], "C+":[], C:[]});
+  // Export current tier list state as JSON file
+  const out = getCurrentTierList();
+  const raw = JSON.stringify(out, null, 2);
   const blob = new Blob([raw], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -349,17 +358,18 @@ importFile.addEventListener('change', (ev)=>{
   reader.onload = (e)=>{
     try{
       const parsed = JSON.parse(e.target.result);
-      // basic validation: object with tier keys
-      // replace local storage and re-render
+      // basic validation: object with tier keys (S, A+, A, ...)
+      if(!parsed || typeof parsed !== 'object' || !parsed.S || !parsed.C){
+        throw new Error('Invalid tierlist structure');
+      }
       localStorage.setItem(LS_KEY, JSON.stringify(parsed));
       loadFromLocal();
       alert('Imported successfully.');
     }catch(err){
-      alert('Import failed: invalid JSON');
+      alert('Import failed: invalid JSON or structure');
     }
   };
   reader.readAsText(f);
-  // reset input
   importFile.value = '';
 });
 
@@ -372,7 +382,6 @@ resetBtn.addEventListener('click', ()=>{
 
 /* ======== Download full self-contained HTML file ======== */
 downloadHTMLBtn.addEventListener('click', ()=>{
-  // build template: header + current tier inner HTML + embedded script/styles that re-enable editor
   const header = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Commander Tier List</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>
   :root{--bg:#f2f2f2;--card-border:#000}
   body{font-family:system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;margin:18px;background:var(--bg);color:#111}
@@ -398,15 +407,12 @@ downloadHTMLBtn.addEventListener('click', ()=>{
   </style></head><body>
   <h1>Commander Tier List (Export)</h1>`;
   const footer = `<script>
-  // Enable simple editing in exported file (same logic as live)
-  /* exported file includes only lightweight re-edit functionality */
-  (()=>{ /* intentionally minimal — you can re-export from original site instead */ })();
+  (()=>{ })();
   </script></body></html>`;
 
-  // Get current tier HTML (only include tier containers and trash)
   const tierNodes = Array.from(document.querySelectorAll('.tier')).map(t => t.outerHTML).join('');
   const trashHTML = document.getElementById('trash').outerHTML;
-  const final = header + '<div id=\"tierContainer\">' + tierNodes + '</div>' + trashHTML + footer;
+  const final = header + '<div id="tierContainer">' + tierNodes + '</div>' + trashHTML + footer;
 
   const blob = new Blob([final], {type:'text/html'});
   const url = URL.createObjectURL(blob);
@@ -419,20 +425,17 @@ downloadHTMLBtn.addEventListener('click', ()=>{
 
 /* ======== Render helpers: loadFromLocal wrapper + attach minimal events ======== */
 function attachTierListeners(){
-  // Attach drag/drop listeners to tiers (works even if cards are newly added)
   tiers.forEach(t=>{
     t.removeEventListener('dragover', onDragOver);
     t.removeEventListener('drop', onDropTier);
     t.addEventListener('dragover', onDragOver);
     t.addEventListener('drop', onDropTier);
   });
-  // trash
   trash.removeEventListener('dragover', onDragOver);
   trash.removeEventListener('drop', onDropTrash);
   trash.addEventListener('dragover', onDragOver);
   trash.addEventListener('drop', onDropTrash);
 
-  // ensure images have dragstart in edit mode
   document.querySelectorAll('.tier img').forEach(img=>{
     img.removeEventListener('dragstart', onDragStart);
     if(editMode){
@@ -444,34 +447,7 @@ function attachTierListeners(){
   });
 }
 
-function loadFromLocal(){
-  const ok = loadFromLocal_impl();
-  attachTierListeners();
-  return ok;
-}
-
-function loadFromLocal_impl(){
-  const raw = localStorage.getItem(LS_KEY);
-  if(!raw) return false;
-  try{
-    const parsed = JSON.parse(raw);
-    clearAllTiers();
-    for(const k of Object.keys(parsed)){
-      const container = document.getElementById(k);
-      if(!container) continue;
-      parsed[k].forEach(item=>{
-        const card = createCardElement(item.img, item.link);
-        container.appendChild(card);
-      });
-    }
-    return true;
-  }catch(err){
-    console.error('Failed to parse saved JSON', err);
-    return false;
-  }
-}
-
-/* ======== On initial load: restore or init ======== */
+/* On initial load: restore or init */
 (function init(){
   const restored = loadFromLocal();
   if(!restored){
@@ -480,8 +456,14 @@ function loadFromLocal_impl(){
   attachTierListeners();
 })();
 
-/* Ensure saving occurs on window unload as well */
 window.addEventListener('beforeunload', saveToLocal);
+
+/* ======== Manual Save/Clear for LocalStorage ======== */
+saveBtn.addEventListener('click', saveToLocal);
+clearSaveBtn.addEventListener('click', ()=>{
+  if(confirm('Clear localStorage saved tier list?')) localStorage.removeItem(LS_KEY);
+});
+
 </script>
 </body>
 </html>
