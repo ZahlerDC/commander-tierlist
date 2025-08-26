@@ -61,13 +61,12 @@ button { padding:5px 10px; margin:2px; cursor:pointer;}
   </select><br>
   <button onclick="addCard()">Add Card</button>
   <button onclick="generateHTML()">Generate HTML</button>
-  <button onclick="downloadHTML()">Download HTML</button>
   <textarea id="htmlOutput" readonly placeholder="Generated HTML will appear here"></textarea>
 </div>
 
 <script>
 let editMode = false;
-const password = "zz";
+const password = "Rahzel";
 let dragged;
 
 function toggleEditMode(){
@@ -188,7 +187,6 @@ Tier:
 </select><br>
 <button onclick="addCard()">Add Card</button>
 <button onclick="generateHTML()">Generate HTML</button>
-<button onclick="downloadHTML()">Download HTML</button>
 <textarea id="htmlOutput" readonly placeholder="Generated HTML will appear here"></textarea>
 </div>
 <script>
@@ -198,17 +196,6 @@ ${document.querySelector("script").innerHTML}
 </html>`;
 
   document.getElementById("htmlOutput").value = header + bodyHTML + footer;
-}
-
-function downloadHTML(){
-  generateHTML();
-  const blob = new Blob([document.getElementById("htmlOutput").value], {type: "text/html"});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "commander-tierlist.html";
-  a.click();
-  URL.revokeObjectURL(url);
 }
 
 window.onload = function(){
